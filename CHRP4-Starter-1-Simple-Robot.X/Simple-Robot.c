@@ -1,14 +1,14 @@
 /*==============================================================================
  File: Simple-Robot.c               Activity: mirobo.tech/chrp4-starter-1
- Date: June 15, 2023
+ Date: December 12, 2023
  
  CHRP4 simple robot starter program. Create your own line-following robot by
  modifying this starter program. It uses either digital or analog light sensing,
  and digital or analog motor control. Follow the steps in the Program Analysis
  Activities below the program code to test your robot's light sensors, connect
- the motors and configure the motor output pins, and to create basic line-
- following robot programs. Optimize your program afterwards for more reliable
- performance and to add additional features.
+ the motors and configure their output pins, and create basic line-following
+ robot programs. Optimize your program afterwards for more reliable performance
+ and to add additional features.
  
  To complete this activity, you will need: a CHRP4 circuit board assembled in
  the line-following configuration (see https://mirobo.tech/assembling-chrp4)
@@ -40,11 +40,14 @@ unsigned char mode = digital;   // Start in digital line-following mode
 unsigned char lightLevelLeft;   // Left sensor light level
 unsigned char lightLevelRight;  // Right sensor light level
 
-// LATC motor output constants. Four highest order LATC bits control motors and 
-// D2-D5 LEDs ? change these bits to control motor direction. Leave two lowest
-// order bits set to keep the D6-D8 LEDs lit up for line and floor sensing. If
-// a motor runs in reverse, either swap the motor wires on the CON1 motor header
-// or change the output pairs in the code, below: (e.g. 0b10... <-> 0b01...)
+// LATC motor output constants. The four most sifnificant LATC bits control both 
+// motors as well as the D2-D5 LEDs. Change these bits to set the motor
+// direction. Leave the two least significant bits set to ensure floor LEDs
+// D6-D8 stay lit and the phototransistor circuits remain energized. If using
+// the 'fwd' motor constant causes either of your motors to run in reverse,
+// either swap that motor's wires on the CON1 motor header, or change swap the
+// pairs of output bits in the code, below: (e.g. 0b10... to 0b01... will change
+// the direction of motor 2)
 const char stop = 0b00000011;   // Both motors off, floor sensor LEDs on
 const char fwd = 0b10010011;    // Both motors forward, floor sensor LEDs on
 //const char rev                  // TODO - Add constants for all required directions
@@ -57,15 +60,15 @@ const char fwd = 0b10010011;    // Both motors forward, floor sensor LEDs on
 
 int main(void)
 {
-    OSC_config();               // Set oscillator for 48 MHz operation
-    CHRP4_config();             // Set up I/O ports for on-board CHRP4 devices
+    OSC_config();               // Configure oscillator for 48 MHz
+    CHRP4_config();             // Configure I/O for on-board CHRP4 devices
     
     D6 = 1;                     // Turn line sensor LED on
     
     // Light sensor test code
     while(1)
     {
-        if(Q1 == 1)             // Check if Q1 sees light
+        if(Q1 == 1)             // Check if Q1 sees dark
         {
             D2 = 1;
         }
@@ -74,7 +77,7 @@ int main(void)
             D2 = 0;
         }
         
-        if(Q2 == 1)             // Check if Q2 sees light
+        if(Q2 == 1)             // Check if Q2 sees dark
         {
             D5 = 1;
         }
@@ -83,7 +86,8 @@ int main(void)
             D5 = 0;
         }
         
-        if(SW1 == 0)            // Check S1 to re-start bootloader
+        // Reset the microcontroller and start the bootloader if SW1 is pressed.
+        if(SW1 == 0)
         {
             RESET();
         }
@@ -101,9 +105,10 @@ int main(void)
             {
                 // TODO - Determine direction to drive in
             }
-            // TODO - Add additional light sensor check and motor output code
+            // TODO - Add additional light sensor checks and motor output code
             
-            if(SW1 == 0)            // Check S1 to re-start bootloader
+            // Reset the microcontroller and start the bootloader if SW1 is pressed.
+            if(SW1 == 0)
             {
                 RESET();
             }
@@ -115,40 +120,46 @@ int main(void)
  * 
  * 1.   After assembling your CHRP4 circuit board into your robot chassis and
  *      installing the optical line sensor components, the next step should be
- *      testing these components to ensure that they can identify both light and
- *      dark surfaces. The first while(1) loop in the main part of this starter
- *      program is temporary code that does just that. It first lights LED D6
- *      and then uses LEDs D2 and D5 to indicate the light levels sensed by the
- *      Q1 and Q2 phototransistors. Note that D6 is an infrared (IR) LED, so
- *      you won't be able to see the light it produces, but the phototransistors
- *      will see the light from D6 reflected off any surface below them.
+ *      to test these components and ensure that they can distinguish between
+ *      light and dark surfaces. The first while(1) loop in the main part of
+ *      this starter program is temporary code that does just that. It first
+ *      lights the line sensor LED (LED D6), and then reads and displays the
+ *      light levels from the Q1 and Q2 phototransistors using LEDs D2 and D5.
+ *      Note that D6 is an infrared (IR) LED, so you won't be able to see the
+ *      light produced by it, but the phototransistors should see the light from
+ *      D6 reflected by white or light-coloured surfaces below them.
  *      
  *      Compile the program and download it into your CHRP4. Create a test
- *      target using a white surface with a thick (1cm) black marking on it ?
- *      you can create this target using a marker or by printing a pattern on
- *      paper, or by applying black electrical tape onto a white surface. Set
- *      your robot on the target and move it over the white and black areas
+ *      target using a white surface with a thick (approx. 1cm wide) black
+ *      marking on it. You can create this target using a black marker on paper,
+ *      or by applying black electrical tape onto a white surface. Set your
+ *      robot on the target and move its sensors over the white and black areas
  *      while running the program. LEDs D2 and D5 should light to indicate when
  *      the phototransistors see the black or dark areas of the target.
  * 
  *      If the LEDs don't light up when the sensors are over the black areas,
  *      check the installation height of both the LEDs and phototransistors,
  *      ensure their solder connections are good, and confirm that you have
- *      installed them into the CHRP4 circuit in the proper orientation. Use
- *      a voltmeter to check the potential across D6 ? it should be around
- *      1.1V ? and measure the potential drops across Q1 and Q2 as you bring
- *      them close to a white reflective surface. The potential should drop as
- *      the phototransistors see more of the reflected light.
+ *      installed them into the CHRP4 circuit in their proper orientation. A
+ *      voltmeter can be used to check the potential across D6 to ensure it is
+ *      lit. If D6 is operating properly, the meter should read around 1.1V.
  * 
- *      If both sensors are working, continue by taking a look at the program
- *      code. The 'if' statements are used to detect light or dark, and to turn
- *      on the appropriate LED when each phototransistor senses dark. The if
- *      statement used checks for 1, or a high voltage. Why do you think that
- *      the phototransistors respond with a high voltage when exposed to dark,
- *      and a low voltage when exposed to light? (Hint: refer to the schematic
- *      to see how they they are connected in the circuit.)
+ *      A voltmeter can also be used to check the voltage drops across Q1 and Q2
+ *      as you bring them close to a white reflective surface. The potential
+ *      should drop as the phototransistors see more reflected light.
  * 
- *      Since we have now characterized the operation of the phototransistors
+ *      After testing both of your sensors and ensuring that they are working,
+ *      continue by examining the program code. The 'if' statements are used to
+ *      detect light or dark, and to turn on the appropriate LED when each
+ *      phototransistor senses dark.
+ * 
+ *      Each if statement used in the program checks for a high voltage level,
+ *      or logic 1. Why do you think that the phototransistor outputs will be a
+ *      higher voltage when exposed to dark, and a low voltage when exposed to
+ *      light? (Hint: refer to the schematic to determine how they they are
+ *      connected in the circuit.)
+ * 
+ * 2.   Now that we have characterized the operation of the phototransistors
  *      in this circuit, we can make it easier for us and others to modify the
  *      program in the future by creating definitions for the expected light
  *      levels. The definitions have already been added at the top of the
@@ -158,11 +169,12 @@ int main(void)
 #define light   0               // Light sensor is illuminated
 #define dark    1               // Light sensor is dark
 
- *      These defined levels will be used in the next section of the program
- *      and help to make the program more easily understandable than using 0
- *      and 1 in the condition statements ?? e.g. if(Q1 == dark && Q2 == dark).
+ *      Change your test program to use the light and dark definitions in the
+ *      if statements and verify that your program works. These definitions will
+ *      be used in the next section of the program to help to make the code more
+ *      easily understandable by than using 0 and 1 in the condition statements.
  * 
- * 2.   With the light sensors tested and working, the next step is testing the
+ * 3.   With the light sensors tested and working, the next step is testing the
  *      motor outputs and configuring the motor directions. If you haven't done
  *      so already, connect the two wires of the left motor to the M1 terminals
  *      and the two right motor wires to the M2 terminals of your CHRP4.
@@ -170,8 +182,8 @@ int main(void)
  *      Next, modify the code at the beginning of the main() function to add
  *      the LATC output instruction, while loop, and RESET() function call below
  *      the D6 = 1; statement as shown below. This will set the motor outputs
- *      and ignore any sensor inputs while waiting for the reset button to be
- *      pressed:
+ *      to a specific value while ignoring any sensor inputs other than waiting
+ *      for the reset button to be pressed:
     
     D6 = 1;                     // Turn line sensor LED on
     LATC = fwd;
@@ -196,17 +208,18 @@ const char fwd = 0b10010011;    // Both motors forward, floor sensor LEDs on
  * 
  *      The two highest order bits connect to M2, the right motor, and the next
  *      two bits connect to M1, the left motor. Assuming the motors are wired
- *      and connected the same way, the 'fwd' motor constant drives the right
- *      motor in one direction using the value '10', and the left motor in the
- *      opposite direction using the value '01'. Since the motors are on
- *      the opposite sides of the robot, these constants should make the motors
- *      drive the robot in either the forward or reverse direction.
+ *      and connected the same way, the pre-defined 'fwd' motor constant drives
+ *      the right motor in one direction using the value '10', and the left 
+ *      motor in the opposite direction using the value '01'. Since the left and
+ *      right motors are located on the opposite sides of the robot, these 
+ *      constants should make the motors drive the robot in either the forward
+ *      or reverse direction if your motors are wired in the same way.
  * 
  *      If your robot drives forward, you're all set to move on to defining
- *      the other motor constants in step 3.
+ *      the other motor constants in the next step.
  * 
  *      If your robot drives reverse, you have two choices: either swap each of
- *      the motor wire connections on terminal strip, or re-define the 'fwd'
+ *      the motor wire connections on the terminal strip, or re-define the 'fwd'
  *      constant to reverse the output bit pairs, like this:
 
 const char fwd = 0b01100011;    // Both motors forward, floor sensor LEDs on
@@ -218,36 +231,38 @@ const char fwd = 0b01100011;    // Both motors forward, floor sensor LEDs on
  *      or participants wire their motors the same way so that it's easier for
  *      students to work together on programming and to share the same code.
  * 
- * 3.   Define and test each of the motor constants for all possible directions.
- *      Assuming the values '10' in the first two bits of the motor constant
- *      drive M2 forward, then changing these bits to '01' will drive M2 in
- *      reverse, while making them '00' will stop M2.
+ * 4.   Complete the motor direction definitions for all possible driving
+ *      directions. Assuming the values '10' in the first two bits of the 'fwd'
+ *      motion definition drive M2 forward, changing these bits to '01' should
+ *      drive M2 in reverse, while '00' will make M2 stop.
  * 
- *      Using these values it will be possible to drive the robot not only
- *      forward and reverse, but also right and left in a number of different
- *      ways. For example:
+ *      Using three possible values for forward, reverse, and stop, for each of
+ *      the two motors, your robot will be able to drive in up to 8 different
+ *      directions. For example, there will be three possible ways to turn the
+ *      robot left:
  * 
  *      Left (on the spot) - left motor in reverse, right motor forward
  *      Forward left - left motor stopped, right motor forward
  *      Reverse left - left motor stopped, right motor in reverse
  * 
- *      You will have to consider which type of turn is best for your particular
+ *      You will have to consider which type of turn is best for any particular
  *      application. A line following robot will be faster if it uses a forward
  *      left turn, for example, but an obstacle-sensing robot can turn faster
- *      using a left turn, or more safely avoid an obstacle using reverse left.
+ *      using a left turn (on the spot), or more safely avoid an obstacle using
+ *      a reverse left turn.
  * 
- *      Create the constants for all of the motor directions and try each one
+ *      Define the constants for all of the motor directions and try each one
  *      in your program to confirm its operation.
  * 
- * 4.   Now that the light sensors have been tested and the motor outputs have
- *      been defined, it's time to put both the input and output code together
- *      to make a simple digital line-following robot. It's digital because it
+ * 5.   Once the light sensors have been tested and the motor outputs have been
+ *      defined, it's time to put both the input and output code together to
+ *      make a simple digital line-following robot. It's digital because it
  *      relies on digital control using an all-or-nothing response -- for each
  *      sensor input there will be a specific motor output.
  * 
- *      Remove the motor test code added in step 2 (leave the statement D6 = 1;)
- *      and comment out or remove the entire light sensor test code while loop.
- *      Your program's main while loop should now start with this code:
+ *      Remove the motor test code added in step 3 (leave the statement D6 = 1;)
+ *      and then comment out the entire light sensor test code while loop. Your
+ *      program's main while loop should now start with this code:
 
     while(1)
     {
@@ -260,9 +275,9 @@ const char fwd = 0b01100011;    // Both motors forward, floor sensor LEDs on
             else if(Q1 == dark && Q2 == light)  // If only Q1 sees the line...
 
  *      As you can see, using the 'dark' and 'light' definitions makes the if
- *      statements more readable. Complete the if condition statements for all
- *      four possible combinations of inputs. You will need to decide on the
- *      best course of action to take when the robot goes off the track (if both
+ *      statements much more readable. Complete the if condition statements
+ *      for all four possible input combinations. You will need to decide on the
+ *      best course of action to take when the robot goes off the line (if both
  *      phototransistors see light), but driving in reverse may be a good
  *      option to start with. You can explore more advanced options to improve
  *      your robot's line-following performance later.
@@ -271,13 +286,14 @@ const char fwd = 0b01100011;    // Both motors forward, floor sensor LEDs on
  *      can make a track using black electrical tape applied to a white surface,
  *      or by drawing or painting a thick, black line on white paper.
  * 
- * 5.   If you watch the digital line-following robot make its way along a 
- *      track, you will notice its deliberate and erratic motions. The motion
- *      can be smoothed by using analog light sensing -- to determine how far
- *      off the line the phototransistor is -- coupled with PWM motor control
- *      to adjust the speed of the motors and provide more than simple on-off
+ * 6.   If you watch the digital line-following robot make its way along a path,
+ *      you will notice that it makes very deliberate motions, switching from
+ *      forward, to turning, and back to forward again. These motions could be
+ *      smoothed by using analog light sensing -- to determine much of the line
+ *      each phototransistor sees -- coupled with PWM motor control to adjust
+ *      the speed of each motor while providing more than simple on-off
  *      control. First, add the pwm_motors() function to your program above
- *      the main() code:
+ *      the main() code function:
 
 // pwm_motors function - drive both motors at the specified speeds (0-255) using
 // pulse-width modultation (PWM). If a motor runs in reverse, either swap the
@@ -308,7 +324,7 @@ void pwm_motors(unsigned char lVal, unsigned char rVal)
     }
 }
 
- *      This function is similar to the PWM code introduced in the Intro-3
+ *      This function is similar to the PWM code introduced in the Intro-3-Loops
  *      introductory activity. Next, add the analog-mode function, below, into
  *      the program's main while(1) loop:
 
@@ -328,8 +344,8 @@ void pwm_motors(unsigned char lVal, unsigned char rVal)
         }
 
  *      This code simply reads the analog light level of each phototransistor
- *      and uses each sensor value as the speed setting for the opposite motor.
- *      No if decisions required!
+ *      and uses each sensor value as the speed setting for the opposite motor--
+ *      with absolutely no if decisions required!
  * 
  *      Before the code can be used, the PORTC analog inputs have to be
  *      configured for operation, and the mode variable has to be set. Copy
@@ -340,21 +356,22 @@ void pwm_motors(unsigned char lVal, unsigned char rVal)
     mode = analog;
 
  *      You should notice that the robot now follows the line more smoothly,
- *      but may get stuck in tight corners.
+ *      but may get stuck in tight corners. 
  * 
- * 6.   Both the digital and analog program modes can be optimized for better
- *      performance. The digital mode can be improved by storing its last
- *      direction whenever it changes direction. Doing this enables the robot
- *      'undo' the last motion when it goes off the track. The analog mode can
- *      be improved by scaling the limits of the phototransistor input values
- *      to the full PWM range to improve the robot's speed, or by overriding
- *      the PWM when the values are too low to efficiently drive the robot. Can
- *      you think of other ways to improve the program?
+ * 7.   Both the digital and analog program modes can be optimized for better
+ *      performance. The digital mode could be improved by having the robot
+ *      remember its last direction whenever it switches to a new direction so
+ *      that it can 'undo' its last motion when it goes off the line. 
+ *      
+ *      The analog mode could be improved by scaling the limits of the PWM range
+ *      to match the limits of the phototransistor input values, or by over-
+ *      riding the PWM values when they are too low to efficiently drive the
+ *      robot. Can you think of other ways to improve the program?
  * 
  *      Try to implement one or more modifications in your robot program code
- *      to improve its performance.
+ *      to improve its performance when following a line.
  * 
- * 7.   While a LATC statement has been used to output motor constants to the
+ * 8.   While a LATC statement has been used to output motor constants to the
  *      four motor port pins, a safer method of motor output uses logical
  *      operations to avoid over-writing the other PORTC pins. Since this
  *      would involve more than one line of code, it might be easier to
@@ -368,15 +385,18 @@ void motors(unsigned char dir)
 }
 
  *      The motors() function uses the same direction constants that were
- *      defined for the LATC statement, but only modifies the four motor pins.
- *      It can be called from your program like this:
+ *      defined for the LATC statement, but only modifies the four motor pins
+ *      instead of re-writing the entire port. It can be called by your
+ *      program like this:
 
         motors(fwd);
 
- * 8.   Another option that could be added to the robot program is mode
+ * 9.   Another option that could be added to the robot program is mode
  *      switching between the digital and analog modes. Below is a version of
  *      the robot program implementing all of the changes from the prior steps
  *      of this activity, including the addition of a start-up mode selector.
+ *      Can you add code to allow the robot to switch between modes while the
+ *      robot is running, after the initial selection has been made?
  */
 
 /*
@@ -490,7 +510,8 @@ int main(void)
             }
             // TODO - Add additional light sensor check and motor output code
             
-            if(SW1 == 0)            // Check S1 to re-start bootloader
+            // Reset the microcontroller and start the bootloader if SW1 is pressed.
+            if(SW1 == 0)
             {
                 RESET();
             }
@@ -505,7 +526,8 @@ int main(void)
             // Drive motors by simple PWM using opposite light (dark) level
             pwm_motors(lightLevelRight, lightLevelLeft);
 
-            if(SW1 == 0)            // Check S1 to re-start bootloader
+            // Reset the microcontroller and start the bootloader if SW1 is pressed.
+            if(SW1 == 0)
             {
                 RESET();
             }
